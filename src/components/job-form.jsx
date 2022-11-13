@@ -1,13 +1,11 @@
 /**
  * External Dependencies
  */
+import { jsPDF } from 'jspdf'
+import { useState } from 'react'
 import classNames from 'classnames'
 import { useForm } from 'react-hook-form'
-
-/**
- * Internal Dependencies
- */
-import { BOARD_ID } from '../constants'
+import { NavLink } from 'react-router-dom'
 
 const isValidEmail = email =>
 	// eslint-disable-next-line no-useless-escape
@@ -17,35 +15,83 @@ const isValidEmail = email =>
 
 const allowedFiles = '.pdf,.doc,.docx,.txt,.rtf,.jpeg,.jpg,.png'
 
-const onSubmit = async (data) => {
-	const { jobId } = data
-	delete data.jobId
+function getExtByFileType( type ) {
+	const hash = {
+		'image/png': 'PNG',
+		'image/jpeg': 'JPEG',
+		'image/jpg': 'JPG',
+	}
 
+	if ( undefined !== hash[ type ] ) {
+		return hash[ type ]
+	}
+
+	return 'JPEG'
+}
+
+const readFileAsText = ( file, key, formData ) => {
+	const reader = new FileReader()
+
+	return new Promise( (resolve, reject) => {
+		reader.onerror = () => {
+			reader.abort()
+			reject(new DOMException("Problem parsing input file."))
+		}
+
+		reader.onloadend = () => {
+			let base64String = reader.result
+			const fileName = file.name
+				.replace( /jpeg|jpg|png/gi, 'pdf' )
+
+			if( file.type.includes('image')) {
+				const doc = new jsPDF({
+					unit: 'in',
+					compress: true
+				})
+				doc.addImage(
+					base64String,
+					getExtByFileType( file.type ),
+					0,
+					0,
+					doc.internal.pageSize.getWidth(),
+					doc.internal.pageSize.getHeight()
+				)
+				base64String = doc.output('datauristring')
+			}
+
+			base64String = base64String
+				.replace('data:', '')
+				.replace(/^.+,/, '')
+			formData.append( key + '_content', base64String )
+			formData.append( key + '_content_filename', fileName )
+			resolve()
+		}
+		reader.readAsDataURL(file)
+	})
+}
+
+const onSubmit = async (data, reset, setSuccess) => {
 	var formData = new FormData()
+	const promises = []
 	Object.entries(data).map(async function( [key, value] ) {
 		if ( '[object FileList]' === value.toString() ) {
-			const file = value[0]
-			// formData.append( key, data[key][0], file.name )
+			promises.push( readFileAsText(value[0], key, formData) )
 		} else {
 			formData.append( key, value )
 		}
 	})
 
-	const token = btoa('f46a729b799f2a14afa22cb886f5c970-5:')
-
-	const response = await fetch(`https://boards-api.greenhouse.io/v1/boards/${BOARD_ID}/jobs/${jobId}`, {
-		method: 'POST',
-		body: JSON.stringify({
-			first_name: 'ssss'
-		}),
-		headers: {
-			'Authorization': 'Basic ' + token,
-			'Accept': 'application/json',
-			'Content-Type': 'application/json'
-		},
+	Promise.all(promises).then( async () => {
+		const response = await fetch('https://stepconnections.ext.constellationenv.com/greenhouse/push', {
+			method: 'POST',
+			body: formData
+		})
+		const content = await response.json()
+		if ( 'Candidate saved successfully' === content.success ) {
+			reset()
+			setSuccess(true)
+		}
 	})
-	const content = await response.json()
-	console.log(content)
 }
 
 function FormField({ question, errors, register }) {
@@ -98,18 +144,31 @@ function FormField({ question, errors, register }) {
 export default function JobForm({ jobId, questions }) {
 	const {
 		register,
+		reset,
 		handleSubmit,
-		formState: { errors }
+		formState: { errors, isSubmitSuccessful }
 	} = useForm({
 		mode: 'onBlur'
 	})
+	const [showSuccess, setSuccess] = useState(false)
+
+	if ( showSuccess ) {
+		return (
+			<div className="max-w-4xl my-12 mx-auto">
+			<h4 className="font-semibold mb-6">Apply for this Class</h4>
+			<p>Job application submitted successfully. <NavLink to="/" className="text-blue-600">Go back to class listing</NavLink>.</p>
+		</div>
+		)
+	}
 
 	return (
 		<div className="max-w-4xl my-12 mx-auto">
 			<h4 className="font-semibold mb-6">Apply for this Class</h4>
-			<form className="job-form" onSubmit={handleSubmit(onSubmit)}>
+			<form className="job-form" onSubmit={handleSubmit((data)=> {
+				onSubmit(data, reset, setSuccess)
+			})}>
 
-				<input type="hidden" {...register('jobId')} value={jobId} />
+				<input type="hidden" {...register('job_id')} value={jobId} />
 
 				{questions.map((question, index) => <FormField register={register} key={`question-${index}`} errors={errors} question={question} />)}
 

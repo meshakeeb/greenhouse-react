@@ -1,5 +1,11 @@
-import { NavLink } from "react-router-dom"
+/**
+ * External Dependencies
+ */
+import { NavLink } from 'react-router-dom'
 
+/**
+ * Internal Dependencies
+ */
 import { normalizeTitle } from '../helpers'
 
 function Job({ item }) {

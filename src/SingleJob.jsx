@@ -2,8 +2,8 @@
  * External Dependencies
  */
 import { useFetch } from 'usehooks-ts'
-import { useParams } from "react-router-dom"
 import { Helmet } from 'react-helmet-async'
+import { NavLink, useParams } from "react-router-dom"
 
 /**
  * Internal Dependencies
@@ -56,6 +56,7 @@ function JobDetails() {
 			</Helmet>
 			<div className="bg-white">
 				<div className="container mx-auto p-8">
+					<NavLink to="/" className="text-xs mb-4 block text-gray-500">&larr; Back to listing</NavLink>
 					<h1 className="text-blue-800 font-bold text-xl mb-8">
 						{title}
 						<small className="text-md block font-normal text-gray-600">at BMW Automotive Service Technician Program</small>
