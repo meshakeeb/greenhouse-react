@@ -70,12 +70,14 @@ const readFileAsText = ( file, key, formData ) => {
 	})
 }
 
-const onSubmit = async (data, reset, setSuccess) => {
+const onSubmit = async (data, reset, setSuccess, setSubmitting) => {
 	var formData = new FormData()
 	const promises = []
 	Object.entries(data).map(async function( [key, value] ) {
 		if ( '[object FileList]' === value.toString() ) {
-			promises.push( readFileAsText(value[0], key, formData) )
+			if ( value[0] ) {
+				promises.push( readFileAsText(value[0], key, formData) )
+			}
 		} else {
 			formData.append( key, value )
 		}
@@ -87,6 +89,8 @@ const onSubmit = async (data, reset, setSuccess) => {
 			body: formData
 		})
 		const content = await response.json()
+
+		setSubmitting(false)
 		if ( 'Candidate saved successfully' === content.success ) {
 			reset()
 			setSuccess(true)
@@ -146,10 +150,11 @@ export default function JobForm({ jobId, questions }) {
 		register,
 		reset,
 		handleSubmit,
-		formState: { errors, isSubmitSuccessful }
+		formState: { errors }
 	} = useForm({
 		mode: 'onBlur'
 	})
+	const [isSubmitting, setSubmitting] = useState(false)
 	const [showSuccess, setSuccess] = useState(false)
 
 	if ( showSuccess ) {
@@ -165,14 +170,23 @@ export default function JobForm({ jobId, questions }) {
 		<div className="max-w-4xl my-12 mx-auto">
 			<h4 className="font-semibold mb-6">Apply for this Class</h4>
 			<form className="job-form" onSubmit={handleSubmit((data)=> {
-				onSubmit(data, reset, setSuccess)
+				setSubmitting(true)
+				onSubmit(data, reset, setSuccess, setSubmitting)
 			})}>
 
 				<input type="hidden" {...register('job_id')} value={jobId} />
 
 				{questions.map((question, index) => <FormField register={register} key={`question-${index}`} errors={errors} question={question} />)}
 
-				<button type="submit">Submit</button>
+				{isSubmitting
+					? (
+						<button disabled="true">
+							<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+							Submitting&hellip;
+						</button>
+					)
+					: (<button type="submit">Submit</button>)
+				}
 
 			</form>
 		</div>
