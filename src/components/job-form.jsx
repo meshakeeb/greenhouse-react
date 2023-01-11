@@ -84,7 +84,9 @@ const onSubmit = async (data, reset, setSuccess, setSubmitting) => {
 	})
 
 	Promise.all(promises).then( async () => {
-		const response = await fetch('https://stepconnections.ext.constellationenv.com/greenhouse/push', {
+		//http://bmwstepconnections.com/
+		//https://stepconnections.ext.constellationenv.com
+		const response = await fetch('https://bmwstepconnections.com/greenhouse/push', {
 			method: 'POST',
 			body: formData
 		})

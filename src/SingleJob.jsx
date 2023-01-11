@@ -3,7 +3,7 @@
  */
 import { useFetch } from 'usehooks-ts'
 import { Helmet } from 'react-helmet-async'
-import { NavLink, useParams } from "react-router-dom"
+import { Navigate, NavLink, useParams } from "react-router-dom"
 
 /**
  * Internal Dependencies
@@ -27,7 +27,7 @@ function JobDetails() {
 	const { data, error } = useFetch(url)
 
 	if ( error ) {
-		return <p className="bg-white p-8">There is an error.</p>
+		return <Navigate to="/" />
 	}
 
 	if ( ! data ) {
