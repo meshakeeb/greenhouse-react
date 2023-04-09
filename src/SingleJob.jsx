@@ -65,7 +65,7 @@ function JobDetails() {
 
 					<div className="job-description" dangerouslySetInnerHTML={{ __html: unescapeHtml(content) }} />
 
-					<JobForm questions={questions} jobId={ jobId } />
+					<JobForm questions={questions} jobId={ jobId } classTitle={ title } />
 				</div>
 			</div>
 		</>

@@ -70,7 +70,7 @@ const readFileAsText = ( file, key, formData ) => {
 	})
 }
 
-const onSubmit = async (data, reset, setSuccess, setSubmitting) => {
+const onSubmit = async (data, classTitle, reset, setSuccess, setSubmitting, setError) => {
 	var formData = new FormData()
 	const promises = []
 	Object.entries(data).map(async function( [key, value] ) {
@@ -84,9 +84,9 @@ const onSubmit = async (data, reset, setSuccess, setSubmitting) => {
 	})
 
 	Promise.all(promises).then( async () => {
-		//http://bmwstepconnections.com/
+		//https://www.bmwstepconnections.com/
 		//https://stepconnections.ext.constellationenv.com
-		const response = await fetch('https://bmwstepconnections.com/greenhouse/push', {
+		const response = await fetch('https://www.bmwstepconnections.com/greenhouse/push', {
 			method: 'POST',
 			body: formData
 		})
@@ -96,7 +96,18 @@ const onSubmit = async (data, reset, setSuccess, setSubmitting) => {
 		if ( 'Candidate saved successfully' === content.success ) {
 			reset()
 			setSuccess(true)
+			if ( window.dataLayer && window.dataLayer.push ) {
+				window.dataLayer.push({
+					event: 'applicationSubmitted',
+					classTitle,
+					name: `${data.first_name} ${data.last_name}`,
+					email: data.email
+				})
+			}
 		}
+	}).catch((error) => {
+		setSubmitting(false)
+		setError(error.message)
 	})
 }
 
@@ -147,7 +158,7 @@ function FormField({ question, errors, register }) {
 	)
 }
 
-export default function JobForm({ jobId, questions }) {
+export default function JobForm({ jobId, classTitle, questions }) {
 	const {
 		register,
 		reset,
@@ -158,6 +169,7 @@ export default function JobForm({ jobId, questions }) {
 	})
 	const [isSubmitting, setSubmitting] = useState(false)
 	const [showSuccess, setSuccess] = useState(false)
+	const [error, setError] = useState(false)
 
 	if ( showSuccess ) {
 		return (
@@ -171,19 +183,21 @@ export default function JobForm({ jobId, questions }) {
 	return (
 		<div className="max-w-4xl my-12 mx-auto">
 			<h4 className="font-semibold mb-6">Apply for this Class</h4>
-			<form className="job-form" onSubmit={handleSubmit((data)=> {
+			<form className="job-form" onSubmit={handleSubmit( async (data)=> {
 				setSubmitting(true)
-				onSubmit(data, reset, setSuccess, setSubmitting)
+				await onSubmit(data, classTitle, reset, setSuccess, setSubmitting, setError)
 			})}>
 
 				<input type="hidden" {...register('job_id')} value={jobId} />
 
 				{questions.map((question, index) => <FormField register={register} key={`question-${index}`} errors={errors} question={question} />)}
 
+				{error && <p>{error}</p>}
+
 				{isSubmitting
 					? (
-						<button disabled="true">
-							<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+						<button disabled={true}>
+							<svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
 							Submitting&hellip;
 						</button>
 					)
