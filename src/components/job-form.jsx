@@ -5,7 +5,7 @@ import { jsPDF } from 'jspdf'
 import { useState } from 'react'
 import classNames from 'classnames'
 import { useForm } from 'react-hook-form'
-import { NavLink } from 'react-router-dom'
+import CustomSelect from './custom-select'
 
 const isValidEmail = email =>
 	// eslint-disable-next-line no-useless-escape
@@ -117,22 +117,17 @@ const onSubmit = async (data, classTitle, reset, setSuccess, setSubmitting, setE
 function FormField({ question, errors, register }) {
 	const {
 		label,
-		description,
 		fields: [ field ],
 		required
 	} = question
-	const { name, type, values } = field
+	const { name, type } = field
 
 	return (
-		<div className={ classNames( 'form-control', { 'has-error': errors[name] } ) }>
+		<li className={ classNames( { 'has-error': errors[name] } ) }>
 			<label htmlFor={name}>
 				{label}
-				{required && <span className="text-red-500 pl-1">*</span> }
+				{required && <span>*</span> }
 			</label>
-
-			{description && (
-				<div className="job-description" dangerouslySetInnerHTML={{__html: description }} />
-			)}
 
 			{'email' === name && 'input_text' === type && (
 				<input type="email" {...register(name, { required, validate: isValidEmail })} id={name} className="text" autoComplete="off" />
@@ -143,21 +138,23 @@ function FormField({ question, errors, register }) {
 			)}
 
 			{'input_file' === type && (
-				<input type="file" {...register(name, { required })} id={name} accept={allowedFiles} />
+				<div className="upload-btn-wrapper">
+					<button className="f_btn">
+						<span>Attach, Dropbox, or enter manually</span>
+						(File types: pdf, doc, docx, txt, rtf)
+					</button>
+					<input type="file" {...register(name, { required })} id={name} accept={allowedFiles} />
+					<small className="file-name"></small>
+				</div>
 			)}
 
 			{'multi_value_single_select' === type && (
-				<select {...register(name, { required })} id={name} className="select">
-					<option value="">Select Option</option>
-					{values.map((option, index) => (
-						<option key={`option-${index}`} value={option.value}>{option.label}</option>
-					) )}
-				</select>
+				<CustomSelect register={register} errors={errors} question={question} />
 			)}
 
 			{errors[name]?.type === 'required' && <p className="error">{label.split(' - ')[0]} is required</p>}
 			{'email' === name && errors.email?.type === 'validate' && <p className="error">Email is invalid</p>}
-		</div>
+		</li>
 	)
 }
 
@@ -175,42 +172,90 @@ export default function JobForm({ jobId, classTitle, questions }) {
 	const [error, setError] = useState(false)
 
 	if ( showSuccess ) {
-		return (
-			<div className="max-w-4xl my-12 mx-auto">
-			<h4 className="font-semibold mb-6">Apply for this Class</h4>
-			<p>Job application submitted successfully. <NavLink to="/" className="text-blue-600">Go back to class listing</NavLink>.</p>
-		</div>
-		)
+		setTimeout(() => {
+			// 👇️ redirects to an external URL
+			window.location.replace(window.applicationRedirect)
+		}, 100)
+		return 'Redirecting'
+	}
+
+	const step1Fields = [ 'first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip', 'license', 'issuing_state' ]
+	const step2Fields = [ 'resume', 'cover_letter', 'portfolio', 'dmvr', 'transcript', 'ase_document', 'ase_link' ]
+	const step3Fields = [ 'recruiter', 'know_about', 'optin' ]
+	const loopQuestions = ( fields ) => {
+		return fields.map((question) => {
+			if (undefined === questions[question]) {
+				return null
+			}
+
+			return <FormField register={register} key={`question-${question}`} errors={errors} question={questions[question]} />
+		})
 	}
 
 	return (
-		<div className="max-w-4xl my-12 mx-auto">
-			<h4 className="font-semibold mb-6">Apply for this Class</h4>
-			<form className="job-form" onSubmit={handleSubmit( async (data)=> {
-				setSubmitting(true)
-				setError(false)
-				await onSubmit(data, classTitle, reset, setSuccess, setSubmitting, setError)
-			})}>
+		<form className="job-form" onSubmit={handleSubmit( async (data)=> {
+			setSubmitting(true)
+			setError(false)
+			await onSubmit(data, classTitle, reset, setSuccess, setSubmitting, setError)
+		})}>
 
-				<input type="hidden" {...register('job_id')} value={jobId} />
+            <ul className="steps">
+                <li className="steps_1"><span>1</span><span className="text">Personal Info</span></li>
+                <li className="steps_2"><span>2</span><span className="text">Documents</span></li>
+                <li className="steps_3"><span>3</span><span className="text">Recruitments Info</span></li>
+            </ul>
 
-				{questions.map((question, index) => <FormField register={register} key={`question-${index}`} errors={errors} question={question} />)}
+			<input type="hidden" {...register('job_id')} value={jobId} />
 
-				{error && <div className="mb-4"><p>{error}</p></div>}
-
-				<div>
-					{isSubmitting
-						? (
-							<button disabled={true}>
-								<svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-								Submitting&hellip;
-							</button>
-						)
-						: (<button type="submit">Submit</button>)
-					}
+			<div className="row g-lg-5">
+				<div className="col-sm-4">
+					<div className="app_form step_1 current">
+						<h3 className="title"><strong><span>1</span>Personal Info</strong></h3>
+						<ul>
+							{loopQuestions(step1Fields)}
+						</ul>
+						<div className="text-center action">
+                            <button type="button" id="step_1" className="cta-btn btn_default toggle-disabled next-button" disabled>Next</button>
+                        </div>
+					</div>
 				</div>
+				<div className="col-sm-4">
+					<div className="app_form step_2" disabled={true}>
+						<h3 className="title"><strong><span>2</span>Documents</strong></h3>
+						<ul>
+							{loopQuestions(step2Fields)}
+						</ul>
+						<div className="text-center action">
+                            <button type="button" className="cta-btn btn_default prev-button">Prev</button>
+                            <button type="button" id="step_2" className="cta-btn btn_default toggle-disabled next-button end-button" disabled>Next</button>
+                        </div>
+					</div>
+				</div>
+				<div className="col-sm-4">
+					<div className="app_form step_3" disabled={true}>
+						<h3 className="title"><strong><span>3</span>Recruitments Info</strong></h3>
+						<ul>
+							{loopQuestions(step3Fields)}
+						</ul>
+					</div>
+				</div>
+			</div>
 
-			</form>
-		</div>
+			{error && <div className="mb-4"><p>{error}</p></div>}
+
+			<div className="text-sm-end text-center form-submit-action">
+                <button type="button" className="cta-btn btn_default prev-button d-sm-none">Prev</button>
+                {isSubmitting
+					? (
+						<button disabled={true} className="cta-btn btn_default">
+							<svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+							Submitting&hellip;
+						</button>
+					)
+					: (<button type="submit" className="cta-btn btn_default">Submit application</button>)
+				}
+            </div>
+
+		</form>
 	)
 }

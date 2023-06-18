@@ -1,6 +1,31 @@
-export function normalizeTitle( rawTitle ) {
-	let title = rawTitle.split(' - ')
-	title.pop()
+const monthNames = [
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December"
+]
 
-	return title.join( ' - ')
+export function normalizeTitle( rawTitle ) {
+	const out = {}
+	const parts = rawTitle.split('; ')
+	const title = parts[0].split(' - ')
+	const dates = parts[1].split(' - ')
+
+	const d1 = new Date(dates[0])
+	const d2 = new Date(dates[1])
+	const options = { month:"long", day:"numeric", year: "numeric"}
+	const formatter = new Intl.DateTimeFormat('en-US', options)
+
+	out.title = title[0]
+	out.date = formatter.format(d1) + ' - ' + formatter.format(d2)
+
+	return out
 }
