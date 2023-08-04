@@ -18,13 +18,12 @@ function useOnClickOutside(ref, handler) {
 	}, [])
 }
 
-function CustomSelect({ question, register }) {
+function CustomSelect({ question, register, setValue }) {
 	const {
 		fields: [ field ],
 		required
 	} = question
 	const { name, values } = field
-	const [currentValue, setCurrentValue] = useState('')
 	const [currentLabel, setCurrentLabel] = useState('')
     const [open, setOpen] = useState(false)
 	const ref = useRef()
@@ -32,18 +31,18 @@ function CustomSelect({ question, register }) {
 
 	const setOption = (label, value) => {
 		setCurrentLabel(label)
-		setCurrentValue(value)
+		setValue(name, value)
 		setOpen(false)
 	}
 
 	return(
 		<div className="custom_select manual">
-			<input type="text" {...register(name, { required })} id={name} value={currentValue} />
+			<input type="text" {...register(name, { required })} id={name} />
 			<div className="select" ref={ref}>
 				<div className={ classNames('select-styled', {active: open}) } onClick={ () => setOpen(!open)}>{currentLabel}</div>
 				{ open && (
 					<ul className="select-options" style={{display: 'block'}}>
-						<li rel="">Please Select </li>
+						<li rel="">Please Select</li>
 						{values.map((option, index) => (
 							<li key={`option-${index}`} rel={option.value} onClick={() => setOption(option.label, option.value)}>{option.label}</li>
 						) )}

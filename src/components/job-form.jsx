@@ -114,7 +114,7 @@ const onSubmit = async (data, classTitle, reset, setSuccess, setSubmitting, setE
 	})
 }
 
-function FormField({ question, errors, register }) {
+function FormField({ question, errors, register, setValue }) {
 	const {
 		label,
 		fields: [ field ],
@@ -149,7 +149,7 @@ function FormField({ question, errors, register }) {
 			)}
 
 			{'multi_value_single_select' === type && (
-				<CustomSelect register={register} errors={errors} question={question} />
+				<CustomSelect register={register} errors={errors} question={question} setValue={setValue} />
 			)}
 
 			{errors[name]?.type === 'required' && <p className="error">{label.split(' - ')[0]} is required</p>}
@@ -162,6 +162,7 @@ export default function JobForm({ jobId, classTitle, questions }) {
 	const {
 		register,
 		reset,
+		setValue,
 		handleSubmit,
 		formState: { errors }
 	} = useForm({
@@ -188,7 +189,7 @@ export default function JobForm({ jobId, classTitle, questions }) {
 				return null
 			}
 
-			return <FormField register={register} key={`question-${question}`} errors={errors} question={questions[question]} />
+			return <FormField register={register} key={`question-${question}`} errors={errors} question={questions[question]} setValue={setValue} />
 		})
 	}
 
