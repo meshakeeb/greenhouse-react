@@ -8,13 +8,12 @@ import { Navigate, useParams } from "react-router-dom"
 /**
  * Internal Dependencies
  */
-import { BOARD_ID } from './constants'
 import JobForm from './components/job-form'
 import { normalizeTitle } from './helpers'
 
 function JobDetails() {
-	const { jobId } = useParams()
-	const url = `https://boards-api.greenhouse.io/v1/boards/${BOARD_ID}/jobs/${jobId}?questions=true`
+	const { boardId, jobId } = useParams()
+	const url = `https://boards-api.greenhouse.io/v1/boards/${boardId}/jobs/${jobId}?questions=true`
 	const { data, error } = useFetch(url)
 
 	if ( error ) {
