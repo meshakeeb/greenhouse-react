@@ -29,3 +29,11 @@ export function normalizeTitle( rawTitle ) {
 
 	return out
 }
+
+export function sanitize_tile( title ) {
+	return title
+		.toLowerCase()
+		.replace(/ /g, '-')
+		.replace(/[^a-z0-9-]/g, '')
+		.replace(/-$/, '')
+}

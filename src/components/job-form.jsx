@@ -183,13 +183,25 @@ export default function JobForm({ jobId, classTitle, questions }) {
 	const step1Fields = [ 'first_name', 'last_name', 'email', 'phone', 'address', 'city', 'state', 'zip', 'license', 'issuing_state' ]
 	const step2Fields = [ 'resume', 'cover_letter', 'portfolio', 'dmvr', 'transcript', 'ase_document', 'ase_link' ]
 	const step3Fields = [ 'recruiter', 'know_about', 'optin' ]
+	const doneLabels = [];
 	const loopQuestions = ( fields ) => {
 		return fields.map((question) => {
 			if (undefined === questions[question]) {
 				return null
 			}
+			doneLabels.push(questions[question].label)
 
 			return <FormField register={register} key={`question-${question}`} errors={errors} question={questions[question]} setValue={setValue} />
+		})
+	}
+
+	const remainingFields = () => {
+		return Object.values(questions).map((question) => {
+			if (doneLabels.includes(question.label)) {
+				return null
+			}
+
+			return <FormField register={register} key={`question-${question.label}`} errors={errors} question={question} setValue={setValue} />
 		})
 	}
 
@@ -237,6 +249,7 @@ export default function JobForm({ jobId, classTitle, questions }) {
 						<h3 className="title"><strong><span>3</span>Recruitments Info</strong></h3>
 						<ul>
 							{loopQuestions(step3Fields)}
+							{remainingFields()}
 						</ul>
 					</div>
 				</div>

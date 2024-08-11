@@ -24,6 +24,7 @@ function Jobs({ department, office }) {
 	let { jobs } = data
 	const hasFilter = -1 !== department || -1 !== office
 
+
 	if ( hasFilter ) {
 		jobs = jobs.filter((job) => {
 			const inDepartment = job.departments.some((item) => item.id === department )
@@ -76,7 +77,9 @@ function Jobs({ department, office }) {
 						<div key={count++} className="pb-6">
 							{! hasFilter && <h2 className="pt-6 font-bold text-xl">{departmentTitle}</h2>}
 							<div className="space-y-4">
-								{jobsInGroup.map((job, index) => <Job item={job} key={index} /> )}
+								{jobsInGroup.map((job, index) => {
+									return <Job item={job} key={count++} />
+								} )}
 							</div>
 						</div>
 					)

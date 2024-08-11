@@ -9,7 +9,7 @@ import { Navigate, useParams } from "react-router-dom"
  * Internal Dependencies
  */
 import JobForm from './components/job-form'
-import { normalizeTitle } from './helpers'
+import { normalizeTitle, sanitize_tile } from './helpers'
 
 function JobDetails() {
 	const { boardId, jobId } = useParams()
@@ -56,9 +56,11 @@ function JobDetails() {
 	}
 	const labels = Object.keys(labelKeys)
 	questions.map((question) => {
-		const key = labels.find( ( label ) => question.label.includes( label ) )
-		normalizedQuestions[ labelKeys[ key ] ] = question
+		let key = labels.find( ( label ) => question.label.includes( label ) )
+		key = key ? labelKeys[ key ] : sanitize_tile( question.label )
+		normalizedQuestions[ key ] = question
 	})
+	console.log(normalizedQuestions);
 
 	return (
 		<section className="application-form-area">
